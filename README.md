@@ -11,6 +11,8 @@ Chunky is a command-line tool that divides files in a folder into chunks without
 - Divides files across multiple output chunks without breaking up individual files
 - Recursive directory traversal
 - Supports ignoring files with `.chunkyignore` (GitIgnore-style patterns)
+- Automatically ignores Chunky-related files and folders
+- Automatically opens the output folder after completion
 - Cross-platform: works on Windows, macOS, and Linux
 - Simple installation process
 
@@ -49,7 +51,13 @@ curl -sSL https://raw.githubusercontent.com/matthewblaire/chunky/master/install.
    chunky --version
    ```
 
-If you see `Chunky version 1.0.5` (or similar), the installation was successful!
+   > **Note**: You may need to restart your terminal or command prompt before the `chunky` command is available in your PATH.
+   > 
+   > If the command isn't found, either restart your terminal session or use the full path to the executable:
+   > - Windows: `%LOCALAPPDATA%\Programs\Chunky\chunky.exe --version`
+   > - macOS/Linux: `~/.local/bin/chunky --version`
+
+If you see `Chunky version 1.1.0` (or similar), the installation was successful!
 
 ### Direct Download Option
 
@@ -57,9 +65,9 @@ If you prefer to download the binaries directly:
 
 1. Visit the [releases page](https://github.com/matthewblaire/chunky/releases)
 2. Download the appropriate file for your system:
-   - Windows: `chunky-windows-1.0.5.zip`
-   - macOS: `chunky-mac-1.0.5.tar.gz`
-   - Linux: `chunky-linux-1.0.5.tar.gz`
+   - Windows: `chunky-windows-1.1.0.zip`
+   - macOS: `chunky-mac-1.1.0.tar.gz`
+   - Linux: `chunky-linux-1.1.0.tar.gz`
 3. Extract the file and place the executable in your PATH
 
 ## Usage
@@ -73,7 +81,8 @@ chunky path/to/folder --chunks 5
 This command will:
 1. Find all files in the specified folder (recursively)
 2. Divide them into 5 chunks
-3. Create a `chunks` subfolder with the chunked files
+3. Create a `chunkies` subfolder with the chunked files
+4. Automatically open the folder with the chunk files
 
 ### Options
 
@@ -100,6 +109,8 @@ node_modules/
 # Ignore specific files
 secrets.txt
 ```
+
+Note: Chunky automatically ignores the `.chunkyignore` file itself and anything in the `chunkies` folder.
 
 ## Examples
 

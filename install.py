@@ -18,7 +18,7 @@ import tarfile
 import urllib.request
 import hashlib
 
-VERSION = "1.0.6"
+VERSION = "1.1.0"
 GITHUB_RELEASES_URL = "https://github.com/matthewblaire/chunky/releases/download"
 RELEASE_TAG = f"v{VERSION}"
 
@@ -157,6 +157,9 @@ def install_binary(binary_path, platform_name):
 
 def update_path(install_dir, platform_name):
     """Update the PATH environment variable if needed."""
+    path_updated = False
+    refresh_needed = False
+    
     if platform_name == "windows":
         # Check if the directory is in the user's PATH
         path_var = os.environ.get('PATH', '')
@@ -166,11 +169,21 @@ def update_path(install_dir, platform_name):
                 ps_command = f'[Environment]::SetEnvironmentVariable("PATH", "$env:PATH;{install_dir}", "User")'
                 subprocess.run(["powershell", "-Command", ps_command], check=True)
                 print(f"Added {install_dir} to your PATH")
-                return True
+                
+                # Try to refresh the current session's PATH
+                try:
+                    # Update the current process environment
+                    os.environ['PATH'] = f"{os.environ['PATH']}{os.pathsep}{install_dir}"
+                    print("PATH refreshed for current session")
+                    path_updated = True
+                except Exception:
+                    refresh_needed = True
+                    
+                return True, refresh_needed
             except Exception as e:
                 print(f"Warning: Could not add directory to PATH: {e}")
                 print(f"Please manually add {install_dir} to your PATH")
-                return False
+                return False, True
     else:
         # For Unix-like systems, check if ~/.local/bin is in PATH
         path_var = os.environ.get('PATH', '')
@@ -183,21 +196,28 @@ def update_path(install_dir, platform_name):
                 rc_file = os.path.expanduser('~/.zshrc')
             else:
                 print(f"Warning: Unsupported shell {shell}. Please manually add {install_dir} to your PATH")
-                return False
+                return False, True
             
             # Append to shell rc file
             try:
                 with open(rc_file, 'a') as f:
                     f.write(f'\n# Added by Chunky installer\nexport PATH="$PATH:{install_dir}"\n')
                 print(f"Added {install_dir} to your PATH in {rc_file}")
-                print("Please restart your terminal or run 'source ~/.bashrc' to use chunky")
-                return True
+                
+                # Try to update current session PATH
+                os.environ['PATH'] = f"{os.environ['PATH']}{os.pathsep}{install_dir}"
+                
+                # Still need to source the rc file for a complete refresh
+                print(f"To use chunky immediately, run: source {rc_file}")
+                refresh_needed = True
+                
+                return True, refresh_needed
             except Exception as e:
                 print(f"Warning: Could not update {rc_file}: {e}")
                 print(f"Please manually add {install_dir} to your PATH")
-                return False
+                return False, True
     
-    return True  # Already in PATH
+    return True, False  # Already in PATH
 
 def check_installation(binary_path, platform_name):
     """Verify the installation by running the version command."""
@@ -212,6 +232,16 @@ def check_installation(binary_path, platform_name):
         print(f"Installation verification failed: {e}")
         if platform_name != "windows":
             print("Try running: chmod +x " + binary_path)
+        
+        # Add additional troubleshooting note
+        print("\nIf you see 'command not found' errors when trying to run 'chunky',")
+        print("this is likely because your PATH environment hasn't been updated in this session.")
+        print("You can always run Chunky using the full path:")
+        if platform_name == "windows":
+            print(f"  {binary_path}")
+        else:
+            print(f"  {binary_path}")
+        
         return False
 
 def main():
@@ -246,12 +276,20 @@ def main():
         install_dir, binary_dest = install_binary(binary_path, platform_name)
         
         # Update PATH if needed
-        update_path(install_dir, platform_name)
+        _, refresh_needed = update_path(install_dir, platform_name)
         
         # Verify installation
-        check_installation(binary_dest, platform_name)
+        check_result = check_installation(binary_dest, platform_name)
         
-        print("\nYou now have chunky! Check installation by running: chunky --version")
+        print("\nYou now have chunky!")
+        
+        if refresh_needed:
+            print("\nIMPORTANT: You may need to restart your terminal or command prompt")
+            print("before the 'chunky' command is available in your PATH.")
+            print("\nAlternatively, you can run chunky directly using the full path:")
+            print(f"  {binary_dest}")
+        else:
+            print("\nCheck installation by running: chunky --version")
 
 if __name__ == "__main__":
     main()

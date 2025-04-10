@@ -1,4 +1,6 @@
 # Chunky ignore file
+.chunkyignore
+chunks/
 # Uses gitignore-style syntax (see https://git-scm.com/docs/gitignore)
 
 # Ignore common directories

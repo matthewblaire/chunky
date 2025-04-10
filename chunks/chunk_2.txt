@@ -1,3 +1,212 @@
+<<<START: .gitignore>>>
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Virtual environments
+venv/
+ENV/
+env/
+.env/
+
+# IDE specific files
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+.history
+
+# Test artifacts
+.coverage
+htmlcov/
+.pytest_cache/
+.tox/
+nosetests.xml
+coverage.xml
+
+# Specific to this project
+chunks/
+<<<END: .gitignore>>>
+
+<<<START: README.md>>>
+# Chunky - Simple File Chunking Tool
+
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/matthewblaire/chunky)
+![GitHub all releases](https://img.shields.io/github/downloads/matthewblaire/chunky/total)
+![License](https://img.shields.io/github/license/matthewblaire/chunky)
+
+Chunky is a command-line tool that divides files in a folder into chunks without splitting file contents. This is useful for processing large collections of files in parallel or for fitting files into size constraints.
+
+## Features
+
+- Divides files across multiple output chunks without breaking up individual files
+- Recursive directory traversal
+- Supports ignoring files with `.chunkyignore` (GitIgnore-style patterns)
+- Cross-platform: works on Windows, macOS, and Linux
+- Simple installation process
+
+## Installation
+
+### Quick Install (Recommended)
+
+**One-line install:**
+
+```bash
+# For macOS/Linux
+curl -sSL https://raw.githubusercontent.com/matthewblaire/chunky/master/install.py | python3
+
+# For Windows (PowerShell)
+(Invoke-WebRequest -Uri https://raw.githubusercontent.com/matthewblaire/chunky/master/install.py -UseBasicParsing).Content | python
+```
+
+### Manual Install Steps
+
+1. Download the installer script:
+   ```bash
+   # For macOS/Linux
+   curl -O https://raw.githubusercontent.com/matthewblaire/chunky/master/install.py
+   
+   # For Windows (PowerShell)
+   Invoke-WebRequest -Uri https://raw.githubusercontent.com/matthewblaire/chunky/master/install.py -OutFile install.py
+   ```
+
+2. Run the installer:
+   ```bash
+   python3 install.py  # Use 'python' on Windows
+   ```
+
+3. Verify installation:
+   ```bash
+   chunky --version
+   ```
+
+If you see `Chunky version 1.0.5` (or similar), the installation was successful!
+
+### Direct Download Option
+
+If you prefer to download the binaries directly:
+
+1. Visit the [releases page](https://github.com/matthewblaire/chunky/releases)
+2. Download the appropriate file for your system:
+   - Windows: `chunky-windows-1.0.5.zip`
+   - macOS: `chunky-mac-1.0.5.tar.gz`
+   - Linux: `chunky-linux-1.0.5.tar.gz`
+3. Extract the file and place the executable in your PATH
+
+## Usage
+
+Basic usage:
+
+```bash
+chunky path/to/folder --chunks 5
+```
+
+This command will:
+1. Find all files in the specified folder (recursively)
+2. Divide them into 5 chunks
+3. Create a `chunks` subfolder with the chunked files
+
+### Options
+
+```
+chunky --help
+```
+
+Available options:
+- `--chunks`, `-c`: Number of output chunks (default: 2)
+- `--output-prefix`: Prefix for output files (default: "chunk")
+- `--version`, `-v`: Show version and exit
+
+### Ignoring Files
+
+Create a `.chunkyignore` file in your target folder to exclude files using gitignore-style patterns:
+
+```
+# Ignore all log files
+*.log
+
+# Ignore the node_modules directory
+node_modules/
+
+# Ignore specific files
+secrets.txt
+```
+
+## Examples
+
+```bash
+# Split a project into 3 chunks
+chunky my_project --chunks 3
+
+# Split with custom output file naming
+chunky documents --chunks 4 --output-prefix document_set
+
+# Check version
+chunky --version
+```
+
+## How It Works
+
+Chunky uses a round-robin algorithm to distribute files across chunks, ensuring that:
+
+1. Files are never split across chunks (each file remains whole)
+2. Files are distributed as evenly as possible among chunks
+3. Each chunk contains the complete file contents with metadata tags
+
+## Building from Source
+
+To build from source:
+
+```bash
+# Clone the repository
+git clone https://github.com/matthewblaire/chunky.git
+cd chunky
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Run the script directly
+python chunky.py path/to/folder --chunks 3
+
+# Or build binaries with PyInstaller
+pip install pyinstaller
+pyinstaller --onefile --name chunky chunky.py
+```
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## License
+
+This project is licensed under the Mozilla Public License 2.0 (MPL-2.0) - see the LICENSE file for details.
+
+<<<END: README.md>>>
+
+<<<START: chunky.py>>>
 #!/usr/bin/env python3
 """
 Chunky - A tool to divide files in a folder into chunks without splitting file contents.
@@ -7,12 +216,10 @@ This script helps organize files for parallel processing or to fit within size c
 import os
 import sys
 import argparse
-import subprocess
-import platform
 from pathlib import Path
 
-# Update version to 1.1.0
-VERSION = "1.1.0"
+# Add version constant
+VERSION = "1.0.6"
 
 try:
     import pathspec
@@ -61,19 +268,9 @@ def list_files(folder: Path, ignore_spec):
         if file.is_file():
             # Create the path relative to the folder root (so that ignore patterns work correctly)
             rel_path = file.relative_to(folder)
-            
-            # Skip .chunkyignore file
-            if file.name == ".chunkyignore":
-                continue
-                
-            # Skip anything in the chunkies folder
-            if "chunkies" in rel_path.parts:
-                continue
-                
             # If we have an ignore spec, check if the file should be ignored
             if ignore_spec and ignore_spec.match_file(str(rel_path)):
                 continue
-                
             all_files.append(file)
     # Optionally sort the files; here we sort by relative path
     return sorted(all_files, key=lambda p: str(p))
@@ -125,45 +322,7 @@ def write_chunk(chunk, output_path, folder_root: Path):
                 out_f.write(f"[Error reading file: {e}]\n")
             # Write post-file tag
             out_f.write(f"\n<<<END: {rel_file_path}>>>\n\n")
-
-
-def open_folder_with_selection(folder_path, files_to_select):
-    """
-    Opens the folder and tries to select the specified files.
-    This is platform-specific functionality.
-    
-    Args:
-        folder_path (Path): The folder to open.
-        files_to_select (list): List of Path objects to select.
-    """
-    system = platform.system()
-    
-    try:
-        if system == "Windows":
-            # On Windows, we can open Explorer and select files
-            files_args = []
-            for file in files_to_select:
-                files_args.extend(["/select,", str(file)])
             
-            subprocess.run(["explorer"] + files_args)
-            
-        elif system == "Darwin":  # macOS
-            # On macOS, we can at least open the folder
-            subprocess.run(["open", str(folder_path)])
-            print("Note: On macOS, files cannot be automatically selected.")
-            
-        elif system == "Linux":
-            # On Linux, try using xdg-open to open the folder
-            subprocess.run(["xdg-open", str(folder_path)])
-            print("Note: On Linux, files cannot be automatically selected.")
-            
-        else:
-            print(f"Automatic folder opening not supported on {system}")
-            
-    except Exception as e:
-        print(f"Failed to open folder: {e}")
-        print(f"You can manually open: {folder_path}")
-
 
 def parse_arguments():
     """
@@ -222,21 +381,49 @@ def main():
     chunks = chunk_files(files, n_chunks)
 
     # Write out each chunk to a separate text file
-    # Change from "chunks" to "chunkies"
-    output_dir = folder_path / "chunkies"
-    output_dir.mkdir(exist_ok=True)  # Create the 'chunkies' directory if it doesn't exist
+    output_dir = folder_path / "chunks"
+    output_dir.mkdir(exist_ok=True)  # Create the 'chunks' directory if it doesn't exist
 
-    output_files = []
     for i, chunk in enumerate(chunks, start=1):
         output_filename = f"{args.output_prefix}_{i}.txt"
         output_path = output_dir / output_filename
         write_chunk(chunk, output_path, folder_path)
         print(f"Wrote {len(chunk)} files to {output_path}")
-        output_files.append(output_path)
-    
-    # Open the folder with files selected
-    open_folder_with_selection(output_dir, output_files)
 
         
 if __name__ == "__main__":
     main()
+<<<END: chunky.py>>>
+
+<<<START: pyproject.toml>>>
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "chunky"
+version = "1.0.6"
+description = "A tool to divide files in a folder into chunks without splitting file contents"
+readme = "README.md"
+authors = [
+    {name = "Your Name", email = "your.email@example.com"}
+]
+license = {text = "MPL-2.0"}
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)",
+    "Operating System :: OS Independent",
+]
+requires-python = ">=3.7"
+dependencies = [
+    "pathspec>=0.9.0",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/matthewblaire/chunky"
+"Bug Tracker" = "https://github.com/matthewblaire/chunky/issues"
+
+[project.scripts]
+chunky = "chunky:main"
+<<<END: pyproject.toml>>>
+
