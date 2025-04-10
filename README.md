@@ -22,10 +22,10 @@ Chunky is a command-line tool that divides files in a folder into chunks without
 
 ```bash
 # For macOS/Linux
-curl -sSL https://raw.githubusercontent.com/matthewblaire/chunky/main/install.py | python3
+curl -sSL https://raw.githubusercontent.com/matthewblaire/chunky/master/install.py | python3
 
 # For Windows (PowerShell)
-(Invoke-WebRequest -Uri https://raw.githubusercontent.com/matthewblaire/chunky/main/install.py -UseBasicParsing).Content | python
+(Invoke-WebRequest -Uri https://raw.githubusercontent.com/matthewblaire/chunky/master/install.py -UseBasicParsing).Content | python
 ```
 
 ### Manual Install Steps
@@ -33,10 +33,10 @@ curl -sSL https://raw.githubusercontent.com/matthewblaire/chunky/main/install.py
 1. Download the installer script:
    ```bash
    # For macOS/Linux
-   curl -O https://raw.githubusercontent.com/matthewblaire/chunky/main/install.py
+   curl -O https://raw.githubusercontent.com/matthewblaire/chunky/master/install.py
    
    # For Windows (PowerShell)
-   Invoke-WebRequest -Uri https://raw.githubusercontent.com/matthewblaire/chunky/main/install.py -OutFile install.py
+   Invoke-WebRequest -Uri https://raw.githubusercontent.com/matthewblaire/chunky/master/install.py -OutFile install.py
    ```
 
 2. Run the installer:
