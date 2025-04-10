@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "chunky"
+version = "1.0.0"
+description = "A tool to divide files in a folder into chunks without splitting file contents"
+readme = "README.md"
+authors = [
+    {name = "Your Name", email = "your.email@example.com"}
+]
+license = {text = "MPL-2.0"}
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)",
+    "Operating System :: OS Independent",
+]
+requires-python = ">=3.7"
+dependencies = [
+    "pathspec>=0.9.0",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/matthewblaire/chunky"
+"Bug Tracker" = "https://github.com/matthewblaire/chunky/issues"
+
+[project.scripts]
+chunky = "chunky:main"

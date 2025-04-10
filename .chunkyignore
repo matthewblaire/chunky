@@ -1,0 +1,35 @@
+# Chunky ignore file
+# Uses gitignore-style syntax (see https://git-scm.com/docs/gitignore)
+
+# Ignore common directories
+node_modules/
+__pycache__/
+.git/
+.idea/
+.vscode/
+venv/
+.env/
+dist/
+build/
+.dart_tool/
+
+# Ignore common file types
+*.log
+*.tmp
+*.temp
+*.swp
+*.swo
+*.bak
+*.cache
+*.pyc
+*.pyo
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Ignore specific files
+.DS_Store
+Thumbs.db
+.env
+.env.local

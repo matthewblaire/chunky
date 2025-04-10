@@ -1,8 +1,16 @@
 #!/usr/bin/env python3
+"""
+Chunky - A tool to divide files in a folder into chunks without splitting file contents.
+
+This script helps organize files for parallel processing or to fit within size constraints.
+"""
 import os
 import sys
 import argparse
 from pathlib import Path
+
+# Add version constant
+VERSION = "1.0.0"
 
 try:
     import pathspec
@@ -109,18 +117,42 @@ def write_chunk(chunk, output_path, folder_root: Path):
 
 def parse_arguments():
     """
-    Parse command-line arguments: the number of chunks and folder path.
+    Parse command-line arguments: the folder path and optional number of chunks.
     """
     parser = argparse.ArgumentParser(description="Chunkifier: divide files in a folder into chunks without splitting file contents.")
-    parser.add_argument("chunks", type=int, help="Number of output text files (chunks)")
-    parser.add_argument("folder", type=str, help="Path to the folder to be chunked")
-    parser.add_argument("--output-prefix", type=str, default="chunk", help="Prefix for output files (default 'chunk')")
+    
+    # Add a version command
+    parser.add_argument('--version', '-v', action='store_true', help='Show the version number and exit')
+    
+    # Only require folder if not checking version
+    if '--version' not in sys.argv and '-v' not in sys.argv:
+        parser.add_argument("folder", type=str, help="Path to the folder to be chunked")
+        parser.add_argument("--chunks", "-c", type=int, default=2, help="Number of output text files (chunks, default: 2)")
+        parser.add_argument("--output-prefix", type=str, default="chunk", help="Prefix for output files (default 'chunk')")
+    else:
+        parser.add_argument("folder", type=str, nargs='?', help="Path to the folder to be chunked")
+        parser.add_argument("--chunks", "-c", type=int, default=2, help="Number of output text files (chunks, default: 2)")
+        parser.add_argument("--output-prefix", type=str, default="chunk", help="Prefix for output files (default 'chunk')")
+    
     args = parser.parse_args()
     return args
 
 
 def main():
     args = parse_arguments()
+    
+    # Check if version was requested
+    if args.version:
+        print(f"Chunky version {VERSION}")
+        sys.exit(0)
+    
+    # Ensure folder is provided if not checking version
+    if not args.folder:
+        print("Error: Folder path is required")
+        print("Usage: chunky [folder] [options]")
+        print("For help, use: chunky --help")
+        sys.exit(1)
+    
     folder_path = Path(args.folder)
     if not folder_path.exists() or not folder_path.is_dir():
         print(f"Error: The folder path '{folder_path}' does not exist or is not a directory.")
@@ -135,7 +167,7 @@ def main():
         print("No files found for chunking after applying ignore rules.")
         sys.exit(0)
 
-    # Divide files into specified number of chunks
+    # Use the specified number of chunks (with a default of 2)
     n_chunks = args.chunks
     chunks = chunk_files(files, n_chunks)
 
