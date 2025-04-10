@@ -49,7 +49,7 @@ curl -sSL https://raw.githubusercontent.com/matthewblaire/chunky/main/install.py
    chunky --version
    ```
 
-If you see `Chunky version 1.0.0` (or similar), the installation was successful!
+If you see `Chunky version 1.0.4` (or similar), the installation was successful!
 
 ### Direct Download Option
 
@@ -57,9 +57,9 @@ If you prefer to download the binaries directly:
 
 1. Visit the [releases page](https://github.com/matthewblaire/chunky/releases)
 2. Download the appropriate file for your system:
-   - Windows: `chunky-windows-1.0.0.zip`
-   - macOS: `chunky-mac-1.0.0.tar.gz`
-   - Linux: `chunky-linux-1.0.0.tar.gz`
+   - Windows: `chunky-windows-1.0.4.zip`
+   - macOS: `chunky-mac-1.0.4.tar.gz`
+   - Linux: `chunky-linux-1.0.4.tar.gz`
 3. Extract the file and place the executable in your PATH
 
 ## Usage
