@@ -18,7 +18,7 @@ import tarfile
 import urllib.request
 import hashlib
 
-VERSION = "1.0.5"
+VERSION = "1.0.6"
 GITHUB_RELEASES_URL = "https://github.com/matthewblaire/chunky/releases/download"
 RELEASE_TAG = f"v{VERSION}"
 

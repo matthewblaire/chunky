@@ -10,7 +10,7 @@ import argparse
 from pathlib import Path
 
 # Add version constant
-VERSION = "1.0.0"
+VERSION = "1.0.6"
 
 try:
     import pathspec
