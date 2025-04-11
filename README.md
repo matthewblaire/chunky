@@ -10,7 +10,8 @@ Chunky is a command-line tool that divides files in a folder into chunks without
 
 - Divides files across multiple output chunks without breaking up individual files
 - Recursive directory traversal
-- Supports ignoring files with `.chunkyignore` (GitIgnore-style patterns)
+- Supports ignoring files with `.chunkyignore` (GitIgnore-style patterns) in any directory
+- Each `.chunkyignore` file only affects its directory and subdirectories
 - Automatically ignores Chunky-related files and folders
 - Automatically opens the output folder after completion
 - Cross-platform: works on Windows, macOS, and Linux
@@ -57,7 +58,7 @@ curl -sSL https://raw.githubusercontent.com/matthewblaire/chunky/master/install.
    > - Windows: `%LOCALAPPDATA%\Programs\Chunky\chunky.exe --version`
    > - macOS/Linux: `~/.local/bin/chunky --version`
 
-If you see `Chunky version 1.1.0` (or similar), the installation was successful!
+If you see `Chunky version 1.1.1` (or similar), the installation was successful!
 
 ### Direct Download Option
 
@@ -65,9 +66,9 @@ If you prefer to download the binaries directly:
 
 1. Visit the [releases page](https://github.com/matthewblaire/chunky/releases)
 2. Download the appropriate file for your system:
-   - Windows: `chunky-windows-1.1.0.zip`
-   - macOS: `chunky-mac-1.1.0.tar.gz`
-   - Linux: `chunky-linux-1.1.0.tar.gz`
+   - Windows: `chunky-windows-1.1.1.zip`
+   - macOS: `chunky-mac-1.1.1.tar.gz`
+   - Linux: `chunky-linux-1.1.1.tar.gz`
 3. Extract the file and place the executable in your PATH
 
 ## Usage
@@ -97,7 +98,7 @@ Available options:
 
 ### Ignoring Files
 
-Create a `.chunkyignore` file in your target folder to exclude files using gitignore-style patterns:
+Create a `.chunkyignore` file in any directory to exclude files using gitignore-style patterns. Each `.chunkyignore` file affects only its own directory and subdirectories:
 
 ```
 # Ignore all log files

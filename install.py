@@ -18,9 +18,16 @@ import tarfile
 import urllib.request
 import hashlib
 
-VERSION = "1.1.0"
+# Import version from version.py
+try:
+    from version import VERSION, get_version_tag
+    RELEASE_TAG = get_version_tag()
+except ImportError:
+    # Fallback in case version.py is not accessible
+    VERSION = "1.2.0"
+    RELEASE_TAG = f"v{VERSION}"
+
 GITHUB_RELEASES_URL = "https://github.com/matthewblaire/chunky/releases/download"
-RELEASE_TAG = f"v{VERSION}"
 
 def get_platform():
     """Determine the current platform."""
@@ -246,6 +253,7 @@ def check_installation(binary_path, platform_name):
 
 def main():
     print("=== Chunky Installer ===")
+    print(f"Installing Chunky version {VERSION}")
     
     # Determine platform
     platform_name = get_platform()

@@ -11,8 +11,12 @@ import subprocess
 import platform
 from pathlib import Path
 
-# Update version to 1.1.0
-VERSION = "1.1.0"
+# Import version from version.py
+try:
+    from version import VERSION
+except ImportError:
+    # Fallback in case version.py is not accessible
+    VERSION = "1.2.0"
 
 try:
     import pathspec
@@ -30,7 +34,7 @@ def load_ignore_spec(folder: Path, ignore_filename=".chunkyignore"):
         ignore_filename (str): The name of the ignore file.
         
     Returns:
-        A compiled pathspec object for matching ignored files.
+        A compiled pathspec object for matching ignored files, or None if no ignore file exists.
     """
     ignore_file = folder / ignore_filename
     if not ignore_file.exists():
@@ -39,42 +43,85 @@ def load_ignore_spec(folder: Path, ignore_filename=".chunkyignore"):
     with ignore_file.open("r") as f:
         lines = f.read().splitlines()
 
-    # Compile patterns using GitIgnorePattern (see pathspec docs for more information)
+    # Compile patterns using GitIgnorePattern
     spec = pathspec.PathSpec.from_lines("gitwildmatch", lines)
     return spec
 
 
-def list_files(folder: Path, ignore_spec):
+def should_ignore_file(file_path: Path, ignore_specs: dict, root_folder: Path):
     """
-    Recursively list all files in folder (as Path objects) that are not matched by the ignore spec.
+    Check if a file should be ignored based on applicable .chunkyignore files.
+    
+    Args:
+        file_path (Path): The file path to check.
+        ignore_specs (dict): Dictionary mapping directories to their ignore specs.
+        root_folder (Path): The root folder of the search.
+        
+    Returns:
+        bool: True if the file should be ignored, False otherwise.
+    """
+    # Skip .chunkyignore files themselves
+    if file_path.name == ".chunkyignore":
+        return True
+        
+    # Skip anything in the chunkies folder
+    rel_path = file_path.relative_to(root_folder)
+    if "chunkies" in rel_path.parts:
+        return True
+    
+    # Build a list of parent directories from closest to furthest
+    parent_dirs = []
+    current_dir = file_path.parent
+    while current_dir >= root_folder:
+        parent_dirs.append(current_dir)
+        current_dir = current_dir.parent
+        
+    # Check directories from closest to furthest (most specific to most general)
+    for dir_path in parent_dirs:
+        if dir_path in ignore_specs and ignore_specs[dir_path] is not None:
+            try:
+                # Get the path relative to the directory containing the .chunkyignore
+                rel_to_ignore = file_path.relative_to(dir_path)
+                # Check if the file matches any ignore pattern
+                if ignore_specs[dir_path].match_file(str(rel_to_ignore)):
+                    return True
+            except ValueError:
+                pass
+        
+    return False
+
+
+def list_files(folder: Path):
+    """
+    Recursively list all files in folder (as Path objects) that are not matched by any ignore specs.
     
     Args:
         folder (Path): The root folder to search.
-        ignore_spec: A compiled pathspec object for filtering out ignored files, or None.
     
     Returns:
         A list of Path objects representing files to be chunked.
     """
     all_files = []
-    # Use rglob to search recursively for files
-    for file in folder.rglob("*"):
-        if file.is_file():
-            # Create the path relative to the folder root (so that ignore patterns work correctly)
-            rel_path = file.relative_to(folder)
-            
-            # Skip .chunkyignore file
-            if file.name == ".chunkyignore":
-                continue
-                
-            # Skip anything in the chunkies folder
-            if "chunkies" in rel_path.parts:
-                continue
-                
-            # If we have an ignore spec, check if the file should be ignored
-            if ignore_spec and ignore_spec.match_file(str(rel_path)):
-                continue
-                
-            all_files.append(file)
+    ignore_specs = {}
+    
+    # First, discover all .chunkyignore files and build ignore specs dictionary
+    for root, dirs, files in os.walk(folder):
+        root_path = Path(root)
+        # Load the ignore spec for this directory if it exists
+        ignore_specs[root_path] = load_ignore_spec(root_path)
+        
+        # Skip the chunkies directory in our walk
+        if "chunkies" in dirs:
+            dirs.remove("chunkies")
+    
+    # Now collect all files, checking against ignore specs
+    for root, _, files in os.walk(folder):
+        root_path = Path(root)
+        for file in files:
+            file_path = root_path / file
+            if not should_ignore_file(file_path, ignore_specs, folder):
+                all_files.append(file_path)
+    
     # Optionally sort the files; here we sort by relative path
     return sorted(all_files, key=lambda p: str(p))
 
@@ -208,11 +255,9 @@ def main():
         print(f"Error: The folder path '{folder_path}' does not exist or is not a directory.")
         sys.exit(1)
 
-    # Load ignore spec from .chunkyignore if it exists in the root folder
-    ignore_spec = load_ignore_spec(folder_path)
-
     # List all non-ignored files in the folder (recursively)
-    files = list_files(folder_path, ignore_spec)
+    # The modified list_files function now handles .chunkyignore files in all directories
+    files = list_files(folder_path)
     if not files:
         print("No files found for chunking after applying ignore rules.")
         sys.exit(0)
@@ -222,7 +267,6 @@ def main():
     chunks = chunk_files(files, n_chunks)
 
     # Write out each chunk to a separate text file
-    # Change from "chunks" to "chunkies"
     output_dir = folder_path / "chunkies"
     output_dir.mkdir(exist_ok=True)  # Create the 'chunkies' directory if it doesn't exist
 
