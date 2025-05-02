@@ -24,7 +24,7 @@ try:
     RELEASE_TAG = get_version_tag()
 except ImportError:
     # Fallback in case version.py is not accessible
-    VERSION = "1.2.0"
+    VERSION = "1.1.1"
     RELEASE_TAG = f"v{VERSION}"
 
 GITHUB_RELEASES_URL = "https://github.com/matthewblaire/chunky/releases/download"
